@@ -1,0 +1,58 @@
+type Pair @entity {
+  id: ID!
+  token0: String! @index
+  token1: String! @index
+  pairAddress: String! @index
+  block: Int!
+  txHash: String!
+  timestamp: DateTime!
+  allPairsLength: BigInt!
+}
+
+type Swap @entity {
+  id: ID!
+  pair: String! @index
+  sender: String! @index
+  amount0In: BigInt!
+  amount1In: BigInt!
+  amount0Out: BigInt!
+  amount1Out: BigInt!
+  to: String! @index
+  block: Int!
+  txHash: String!
+  timestamp: DateTime!
+}
+
+type Mint @entity {
+  id: ID!
+  pair: String! @index
+  sender: String! @index
+  amount0: BigInt!
+  amount1: BigInt!
+  block: Int!
+  txHash: String!
+  timestamp: DateTime!
+}
+
+type Burn @entity {
+  id: ID!
+  pair: String! @index
+  sender: String! @index
+  amount0: BigInt!
+  amount1: BigInt!
+  to: String! @index
+  block: Int!
+  txHash: String!
+  timestamp: DateTime!
+}
+
+type PairStats @entity {
+  id: ID!                    # pair address
+  totalSwaps: Int!
+  totalMints: Int!
+  totalBurns: Int!
+  lastActivity: DateTime!
+  firstActivity: DateTime!
+  totalVolumeToken0: BigInt!
+  totalVolumeToken1: BigInt!
+}

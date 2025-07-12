@@ -1,0 +1,19 @@
+manifestVersion: subsquid.io/v0.1
+name: uniswapv2
+version: 1
+description: 'Uniswap V2 indexer - tracks all trading pairs, swaps, mints, and burns'
+
+build:
+
+deploy:
+  addons:
+    postgres:
+    rpc:
+      - eth.http
+  processor:
+    cmd: ["sqd", "process:prod"]
+  api:
+    cmd: ["sqd", "serve:prod"]
+
+scale:
+  dedicated: false
