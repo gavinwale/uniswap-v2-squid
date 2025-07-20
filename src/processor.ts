@@ -13,6 +13,7 @@ export const UNISWAP_V2_FACTORY = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'
 
 export const processor = new EvmBatchProcessor()
     .setGateway('https://v2.archive.subsquid.io/network/ethereum-mainnet')
+    .setRpcEndpoint('https://rpc.ankr.com/eth')
     .setFinalityConfirmation(100)
     .setFields({
         log: {
@@ -21,11 +22,16 @@ export const processor = new EvmBatchProcessor()
             topics: true,
             blockNumber: true,
             blockTimestamp: true,
+            logIndex: true,
+        },
+        transaction: {
+            from: true,
+            hash: true,
         },
     })
     .setBlockRange({
         from: 10000835, // Uniswap V2 Factory deployment
-        to: 14000000, // Adjust this value to the latest block you want to index
+        to: 10500835,   // Just 500,000 blocks from launch
     })
     .addLog({
         address: [UNISWAP_V2_FACTORY],
@@ -36,7 +42,9 @@ export const processor = new EvmBatchProcessor()
             pairEvents.Swap.topic,
             pairEvents.Mint.topic,
             pairEvents.Burn.topic,
+            pairEvents.Sync.topic,
         ],
+        transaction: true,
     })
 
 export type Fields = EvmBatchProcessorFields<typeof processor>
