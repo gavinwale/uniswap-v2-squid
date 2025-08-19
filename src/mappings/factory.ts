@@ -148,7 +148,7 @@ function createToken(id: string) {
 
 function createBundle(id: string) {
   const bundle = new Bundle({ id })
-  bundle.ethPrice = 300 // Default ETH price for early blocks
+  bundle.ethPrice = 0
   return bundle
 }
 

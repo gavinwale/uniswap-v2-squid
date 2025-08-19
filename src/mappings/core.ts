@@ -3,9 +3,9 @@ import { EntityManager } from '../utils/entityManager'
 import { BlockMap } from '../utils/blockMap'
 import { events as pairEvents } from '../abi/uniswapV2Pair'
 import { UniswapFactory, Token, Pair, Bundle, Transaction, Mint, Burn, Swap } from '../model'
-import { FACTORY_ADDRESS, TOKEN_DECIMALS } from '../utils/constants'
-import { WHITELIST_TOKENS, STABLE_COINS, WETH_ADDRESS, getTrackedVolumeUSD, getTrackedLiquidityUSD } from '../utils/pricing'
-import { convertTokenToDecimal, addressToBytes, ZERO_BD, ONE_BD } from '../utils/tools'
+import { FACTORY_ADDRESS } from '../utils/constants'
+import { STABLE_COINS, WETH_ADDRESS, getTrackedVolumeUSD, getTrackedLiquidityUSD } from '../utils/pricing'
+import { convertTokenToDecimal } from '../utils/tools'
 
 interface EventData {
   type: 'sync' | 'mint' | 'burn' | 'swap'
@@ -230,17 +230,19 @@ function handleMint(
   const token0Amount = convertTokenToDecimal(amount0, token0.decimals)
   const token1Amount = convertTokenToDecimal(amount1, token1.decimals)
 
-  const amountUSD = token0Amount * token0.derivedETH * bundle.ethPrice + 
+  const amountUSD = token0Amount * token0.derivedETH * bundle.ethPrice +
                    token1Amount * token1.derivedETH * bundle.ethPrice
+
+  const liquidity = Math.sqrt(token0Amount * token1Amount)
 
   const mint = new Mint({
     id: `${eventData.txHash}-${eventData.logIndex}`,
     transaction,
     timestamp: BigInt(block.timestamp),
     pair,
-    to: addressToBytes(sender.toLowerCase()),
-    liquidity: 0,
-    sender: addressToBytes(sender.toLowerCase()),
+    to: sender.toLowerCase(),
+    liquidity,
+    sender: sender.toLowerCase(),
     amount0: token0Amount,
     amount1: token1Amount,
     logIndex: BigInt(eventData.logIndex),
@@ -250,6 +252,9 @@ function handleMint(
   })
 
   ctx.entities.add(mint)
+
+  token0.totalLiquidity += token0Amount
+  token1.totalLiquidity += token1Amount
 
   // Update counters
   pair.txCount += 1n
@@ -274,19 +279,21 @@ function handleBurn(
   const token0Amount = convertTokenToDecimal(amount0, token0.decimals)
   const token1Amount = convertTokenToDecimal(amount1, token1.decimals)
 
-  const amountUSD = token0Amount * token0.derivedETH * bundle.ethPrice + 
+  const amountUSD = token0Amount * token0.derivedETH * bundle.ethPrice +
                    token1Amount * token1.derivedETH * bundle.ethPrice
+
+  const liquidity = Math.sqrt(token0Amount * token1Amount)
 
   const burn = new Burn({
     id: `${eventData.txHash}-${eventData.logIndex}`,
     transaction,
     timestamp: BigInt(block.timestamp),
     pair,
-    liquidity: 0,
-    sender: addressToBytes(sender.toLowerCase()),
+    liquidity,
+    sender: sender.toLowerCase(),
     amount0: token0Amount,
     amount1: token1Amount,
-    to: addressToBytes(to.toLowerCase()),
+    to: to.toLowerCase(),
     logIndex: BigInt(eventData.logIndex),
     amountUSD,
     needsComplete: false,
@@ -295,6 +302,9 @@ function handleBurn(
   })
 
   ctx.entities.add(burn)
+
+  token0.totalLiquidity = Math.max(0, token0.totalLiquidity - token0Amount)
+  token1.totalLiquidity = Math.max(0, token1.totalLiquidity - token1Amount)
 
   // Update counters
   pair.txCount += 1n
@@ -336,15 +346,15 @@ function handleSwap(
   const swap = new Swap({
     id: `${eventData.txHash}-${eventData.logIndex}`,
     transaction,
-    timestamp: BigInt(block.timestamp),
+    timestamp: BigInt(block.timestamp), // Block timestamp in seconds
     pair,
-    sender: addressToBytes(sender.toLowerCase()),
-    from: addressToBytes(sender.toLowerCase()),
+    sender: sender.toLowerCase(),
+    from: sender.toLowerCase(),
     amount0In: amount0InDecimal,
     amount1In: amount1InDecimal,
     amount0Out: amount0OutDecimal,
     amount1Out: amount1OutDecimal,
-    to: addressToBytes(to.toLowerCase()),
+    to: to.toLowerCase(),
     logIndex: BigInt(eventData.logIndex),
     amountUSD: finalAmountUSD
   })
@@ -463,7 +473,7 @@ async function getEthPriceInUSD(ctx: ContextWithEntityManager): Promise<number> 
     }
   }
 
-  return bestPrice > 0 ? bestPrice : 300 // Default fallback
+  return bestPrice > 0 ? bestPrice : 0 // No fallback - let pricing system work
 }
 
 async function findEthPerToken(token: Token, ctx: ContextWithEntityManager): Promise<number> {

@@ -97,17 +97,17 @@ type Mint @entity {
   # need this to pull recent txns for specific token or pair
   pair: Pair!
   # populated from the primary Transfer event
-  to: Bytes!
+  to: String!
   liquidity: Float!
   # populated from the Mint event
-  sender: Bytes
+  sender: String
   amount0: Float
   amount1: Float
   logIndex: BigInt
   # derived amount based on available prices of tokens
   amountUSD: Float
   # optional fee fields, if a Transfer event is fired in _mintFee
-  feeTo: Bytes
+  feeTo: String
   feeLiquidity: Float
 }
 
@@ -122,17 +122,17 @@ type Burn @entity {
   # populated from the primary Transfer event
   liquidity: Float!
   # populated from the Burn event
-  sender: Bytes
+  sender: String
   amount0: Float
   amount1: Float
-  to: Bytes
+  to: String
   logIndex: BigInt
   # derived amount based on available prices of tokens
   amountUSD: Float
   # mark uncomplete in ETH case
   needsComplete: Boolean!
   # optional fee fields, if a Transfer event is fired in _mintFee
-  feeTo: Bytes
+  feeTo: String
   feeLiquidity: Float
 }
 
@@ -145,13 +145,13 @@ type Swap @entity {
   # need this to pull recent txns for specific token or pair
   pair: Pair!
   # populated from the Swap event
-  sender: Bytes!
-  from: Bytes! # the EOA that initiated the txn
+  sender: String!
+  from: String! # the EOA that initiated the txn
   amount0In: Float!
   amount1In: Float!
   amount0Out: Float!
   amount1Out: Float!
-  to: Bytes!
+  to: String!
   logIndex: BigInt
   # derived info
   amountUSD: Float!
