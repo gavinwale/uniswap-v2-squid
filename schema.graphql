@@ -1,168 +1,106 @@
-# Core Uniswap V2 Factory entity
 type UniswapFactory @entity {
-  # factory address
   id: ID!
-  # pair info
   pairCount: Int!
-  # total volume
   totalVolumeUSD: Float!
   totalVolumeETH: Float!
-  # untracked values - less confident USD scores
   untrackedVolumeUSD: Float!
-  # total liquidity
   totalLiquidityUSD: Float!
   totalLiquidityETH: Float!
-  # transactions
   txCount: BigInt!
 }
 
-# Token entity with comprehensive tracking
 type Token @entity {
-  # token address
   id: ID!
-  # mirrored from the smart contract
   symbol: String!
   name: String!
   decimals: BigInt!
-  # used for other stats like marketcap
   totalSupply: BigInt!
-  # token specific volume
   tradeVolume: Float!
   tradeVolumeUSD: Float!
   untrackedVolumeUSD: Float!
-  # transactions across all pairs
   txCount: BigInt!
-  # liquidity across all pairs
   totalLiquidity: Float!
-  # derived prices
   derivedETH: Float!
-  # whitelist pools for pricing
   whitelistPools: [String!]!
 }
 
-# Trading pair entity with comprehensive data
 type Pair @entity {
-  # pair address
   id: ID!
-  # mirrored from the smart contract
   token0: Token!
   token1: Token!
   reserve0: Float!
   reserve1: Float!
   totalSupply: Float!
-  # derived liquidity
   reserveETH: Float!
   reserveUSD: Float!
-  # used for separating per pair reserves and global
   trackedReserveETH: Float!
-  # Price in terms of the asset pair
   token0Price: Float!
   token1Price: Float!
-  # lifetime volume stats
   volumeToken0: Float!
   volumeToken1: Float!
   volumeUSD: Float!
   untrackedVolumeUSD: Float!
   txCount: BigInt!
-  # creation stats
   createdAtTimestamp: BigInt!
   createdAtBlockNumber: BigInt!
-  # Fields used to help derived relationship
-  liquidityProviderCount: BigInt!
 }
 
-# User entity for tracking participants
-type User @entity {
-  id: ID!
-}
-
-# Transaction entity for grouping events
 type Transaction @entity {
-  id: ID! # txn hash
+  id: ID!
   blockNumber: BigInt!
   timestamp: BigInt!
-  # This is not the reverse of Mint.transaction; it is only used to
-  # track incomplete mints (similar for burns and swaps)
   mints: [Mint!]! @derivedFrom(field: "transaction")
   burns: [Burn!]! @derivedFrom(field: "transaction")
   swaps: [Swap!]! @derivedFrom(field: "transaction")
 }
 
-# Mint event (liquidity addition)
 type Mint @entity {
-  # transaction hash + "-" + index in mints Transaction array
   id: ID!
   transaction: Transaction!
   timestamp: BigInt!
-  # need this to pull recent txns for specific token or pair
   pair: Pair!
-  # populated from the primary Transfer event
   to: String!
   liquidity: Float!
-  # populated from the Mint event
   sender: String
   amount0: Float
   amount1: Float
   logIndex: BigInt
-  # derived amount based on available prices of tokens
   amountUSD: Float
-  # optional fee fields, if a Transfer event is fired in _mintFee
-  feeTo: String
-  feeLiquidity: Float
 }
 
-# Burn event (liquidity removal)
 type Burn @entity {
-  # transaction hash + "-" + index in burns Transaction array
   id: ID!
   transaction: Transaction!
   timestamp: BigInt!
-  # need this to pull recent txns for specific token or pair
   pair: Pair!
-  # populated from the primary Transfer event
   liquidity: Float!
-  # populated from the Burn event
   sender: String
   amount0: Float
   amount1: Float
   to: String
   logIndex: BigInt
-  # derived amount based on available prices of tokens
   amountUSD: Float
-  # mark uncomplete in ETH case
-  needsComplete: Boolean!
-  # optional fee fields, if a Transfer event is fired in _mintFee
-  feeTo: String
-  feeLiquidity: Float
 }
 
-# Swap event
 type Swap @entity {
-  # transaction hash + "-" + index in swaps Transaction array
   id: ID!
   transaction: Transaction!
   timestamp: BigInt!
-  # need this to pull recent txns for specific token or pair
   pair: Pair!
-  # populated from the Swap event
   sender: String!
-  from: String! # the EOA that initiated the txn
+  from: String!
   amount0In: Float!
   amount1In: Float!
   amount0Out: Float!
   amount1Out: Float!
   to: String!
   logIndex: BigInt
-  # derived info
   amountUSD: Float!
 }
 
-# stores for USD calculations
 type Bundle @entity {
   id: ID!
-  ethPrice: Float! # price of ETH usd
+  ethPrice: Float!
 }
-
-# End of core schema
 
 
