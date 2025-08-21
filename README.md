@@ -20,6 +20,7 @@ This indexer provides **complete Uniswap V2 analytics** with:
 # Clone and setup
 git clone https://github.com/gavinwale/uniswap-v2-squid
 cd uniswap-v2-squid
+cp .env.example .env
 npm install
 npm i -g @subsquid/cli
 
@@ -135,4 +136,5 @@ All mapping logic consolidated into `src/mappings/processor.ts` for:
 - **Add Token Metadata Calls:** Currently uses hardcoded info for major tokens (WETH, DAI, USDC, USDT) and contract addresses for others. You can extend the `createToken()` function in `src/mappings/processor.ts` to make RPC calls for real token metadata (name, symbol, decimals).
 
 - **More RPC Features:** See https://docs.sqd.ai/
+
 
